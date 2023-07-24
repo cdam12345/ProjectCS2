@@ -1,5 +1,15 @@
 public class SkipListSet
 {
+    private class SkipListSetNode
+    {
+
+    }
+
+    private class SkipListSetIterator
+    {
+        
+    }
+
     // Implement all this functions from the SortedSet Interface: 
     // add
     // addAll
