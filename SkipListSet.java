@@ -1,16 +1,17 @@
 import java.util.*;
-public class SkipListSet
+
+public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
 {
-    private SkipListSetNode head;
+    private SkipListSetNode<T> head;
     private int level;
     private int size;
     private Random ran = new Random(); // random  object to randomize levels
 
     // this wrapper class implements comparable
-    private class SkipListSetNode
+    private class SkipListSetNode<T extends Comparable<T>>
     {
         private Object value;
-        private SkipListSetNode [] forward; // Should use ArrayList of pointers to the right because regular arrays can't handle generics 
+        private ArrayList<SkipListSetNode> forward; // Should use ArrayList of pointers to the right because regular arrays can't handle generics 
 
         private Object value()
         {
@@ -22,19 +23,49 @@ public class SkipListSet
             value = key;
 
             // an array of skiplist to save the references of all skip list nodes
-            forward = new SkipListSetNode[lev+1];
+            forward = new ArrayList<SkipListSetNode>(lev+1);
             for (int i = 0; i < lev; i++) // test later if i <= lev works
                 forward[i] = null;
+        }
+
+        // Compares this object with the specified object for order
+        @Override
+        public int compareTo(T o)
+        {
+            return 0;
         }
     }
 
     // Implement this functions from the Iterator interface: This class implements the Iterator interface
-    private class SkipListSetIterator
+    private class SkipListSetIterator<T extends Comparable<T>> implements Iterator<T>
     {
+        SkipListSetNode<T> cursor;
 
-        // hasNext
-        // next
-        // remove 
+        SkipListSetIterator(SkipListSetNode<T> h)
+        {
+            this.cursor = h;
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            return cursor == null;
+        }
+
+        // returns an int for now. Generic: returns an element E
+        @SuppressWarnings({"unchecked"})
+        public T next()
+        {
+            T temp = (T)cursor.value();
+            cursor = cursor.forward[0];
+            return temp;
+        }
+
+        @Override
+        public void remove()
+        {
+
+        } 
     }
 
     // Default Constructor that does not accept arguments. Returns an empty skiplist  
@@ -44,7 +75,7 @@ public class SkipListSet
         // to an object. For now, I am setting 0 as if it were null for the head
         this.head = new SkipListSetNode(0, 0);
 
-        // "Floor level" starts being -1, this is where all the values are stored. forward pointers start at level 0
+        // "Bottom level" starts being -1, this is where all the values are stored. forward pointers start at level 0
         this.level = -1;
         this.size = 0;
     }
@@ -93,12 +124,13 @@ public class SkipListSet
     }
 
     //  inserts a key to an appropiate place in the skipList. I am inserting everything in sorted order for now.
-    private void insertNode(int key)
+    @Override
+    public boolean add(T key)
     {
         // pass 2 to get a geometric distrubution for node's randomized level
         int newLevel = randomizeLevel();
         if (newLevel > level)
-            adjustHeadLevel(newLevel);
+            adjustHeadLevel(newLevel); // flag == 1 for insertion
 
         SkipListSetNode [] tempNodeReferences = new SkipListSetNode[level+1];
 
@@ -124,18 +156,27 @@ public class SkipListSet
         this.size++;
     }
 
-    // Implement all this functions from the SortedSet Interface: 
-
-    // add
-    // addAll
+    @Override
+    public boolean addAll(Collection<? extends T> c)
+    {
+        return false;
+    }
 
     // Removes all of the elements from this skipList set
-    private void clear()
+    @Override
+    public void clear()
     {
         head = null;
     }
-    // comparator
-    private boolean contains(int key)
+
+    @Override
+    public Comparator <? super T> comparator()
+    {
+        return null;
+    } 
+
+    @Override
+    private boolean contains(Object key)
     {
         if (size() > 0)
         {
@@ -155,35 +196,83 @@ public class SkipListSet
 
         return false;
     }
-    // containsAll
-    // equals
 
-    // Returns the first (lowest) element in current SkipListSet. Returns an int for now
-    private int first()
+    public boolean containsAll(Collection <?> c)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if ( !(o instanceof Set) )
+            return false;
+
+        Set temp = (Set)o;
+        if (temp.size() != size)
+        {
+            return false;
+        }
+
+        for (T current : this)
+        {
+            if (!temp.contains(current))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Returns the first (lowest) element in current SkipListSet. 
+    @Override
+    public T first()
     {
         // SkipList is not empty
         if (size > 0 ) 
-            return (int)head.forward[0].value; // typecasting for now
-        return -1; // returns -1 for now if skipList is empty
+            return (T)head.forward[0].value; 
+        return null; // returns -1 for now if skipList is empty
     }
 
-    // hashCode
-    // headSet
+    @Override
+    public int hashCode()
+    {
+        int temp = 0;
+        for (T e : this) 
+        {
+            temp =+ e.hashCode();
+        }
 
-    // Returns true or false if current skipList set is empty or not
-    private boolean isEmpty()
+        return temp;
+    }
+
+    @Override
+    public SortedSet<T> headSet(T toElement)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isEmpty()
     {
         return size == 0;
     }
-    // iterator
+
+    // Parametrized this return type using <T> type
+    public SkipListSetIterator<T> iterator()
+    {
+        return new SkipListSetIterator<>(head);
+    }
 
     // Returns the last (highest) element in current SKipListSet. Returns int for now
-    private int last()
+    @Override
+    public T last()
     {   
         // Ierate as long as there is at least an item in the skipList
         if (size() > 0)
         {
-            SkipListSetNode temp = head;
+            SkipListSetNode<T> temp = head;
             for (int i = level; i >= 0; i--)
             {
                 while (temp.forward[i] != null)
@@ -191,34 +280,124 @@ public class SkipListSet
             }
 
             // When i becomes negative we will have iterated to the very last entry
-            return (int)temp.value();
+            return (T)temp.value();
         }
 
-        return -1; // returns -1 from now
+        return null; // returns -1 from now
     } 
 
-    // remove
-    // removeAll
-    // retainAll
-    private int size()
+    @Override
+    public boolean remove(Object key)
+    {
+        SkipListSetNode [] tempNodeReferences = new SkipListSetNode[level+1];
+        SkipListSetNode temp = head; 
+        for (int i = level; i >= 0; i--)
+        {
+            while ( (temp.forward[i] != null) && ((int)temp.forward[i].value() < key) )
+            {
+                temp = temp.forward[i];
+            }
+            tempNodeReferences[i] = temp;
+        }
+
+        // create new links in saved nodes
+        if ((int)temp.forward[0].value() == key)
+        {
+            // iteraring through all nodes stored in tempNodeReferences[].
+            SkipListSetNode delNode = temp.forward[0];
+            for (int i = 0; i <= level; i++)
+            {
+                // first case: height of current tempNodeReferences node is greater than delNode's height
+                if (tempNodeReferences[i].forward.length > delNode.forward.length)
+                {
+                    for (int j = 0; j < delNode.forward.length; j++)
+                    {
+                        if (tempNodeReferences[i].forward[j] != delNode)
+                        {
+                            continue;
+                        }
+                        else 
+                            tempNodeReferences[i].forward[j] = delNode.forward[j];
+                    }
+                }
+
+                else // means height of current tempNodeReferences node is less than delNode's height
+                {
+                    for (int j = 0; j < tempNodeReferences[i].forward.length; j++)
+                    {
+                        if (tempNodeReferences[i].forward[j] != delNode)
+                        {
+                            continue;
+                        }
+                        else
+                            tempNodeReferences[i].forward[j] = delNode.forward[j];
+                    }
+                }
+            }
+
+            this.size--;
+            return true;
+        }
+
+        // key not found
+        return false;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c)
+    {
+        return false;
+    }
+
+    @Override
+    public int size()
     {
         return size;
     }
 
-    private int maxLevel()
+    public int maxHeight()
     {
         return head.forward.length;
     }
-    // subSet
-    // tailSet
 
-    // returns an array containing all the elements in this set. 
+    public SkipListSetNode head()
+    {
+        return head;
+    }
 
-    // Returns an Object array of each entry in the skipList
-    // toArray
+    @Override
+    public SortedSet<T> subSet(T fromElement, T toElement)
+    {
+        throw new UnsupportedOperationException();
+    }
 
-    // Returns an Generic Array <T> [] of each entry in the skipList 
-    // toArray
+    @Override
+    public SortedSet<T> tailSet(T fromElement)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // // returns an array containing all the elements in this set. 
+    // // Returns an Object array of each entry in the skipList
+    @Override
+    public Object[] toArray()
+    {
+        return null;
+    }
+
+
+    // // Returns an Generic Array <E> [] of each entry in the skipList 
+    @SuppressWarnings({"unchecked"})
+    public <E> E[] toArray(E[] temp)
+    {
+        return null;
+    }
 
     public static void main(String[] args) 
     {
@@ -228,41 +407,53 @@ public class SkipListSet
 
         // System.out.println("After first insertion:");
 
-        sk.insertNode(10);
+        sk.add(10);
 
         // System.out.println(sk.head.forward[0].value);
         // System.out.println("After second insertion:");
-        sk.insertNode(20);
+        sk.add(20);
 
         // System.out.println(sk.head.forward[0].forward[0].value);
         // System.out.println(sk.head.forward[0].forward[0].forward[0]);
-        sk.insertNode(30);
+        sk.add(30);
 
         // System.out.println(sk.head.forward[0].forward[0].forward[0].value);
-        sk.insertNode(25);
+        sk.add(25);
+
+        System.out.println("Testing iterable:");
+        for (SkipListSetNode s : sk)
+        {
+            System.out.println(s);
+        }
 
         // System.out.println(sk.head.forward[0].forward[0].forward[0].forward[0].value);
-        sk.print();
-        System.out.println("Retrieval of current size:");
 
-        sk.print();
+        // sk.print();
 
-        System.out.println("First item: " + sk.first());
+        // System.out.println("Retrieval of current size:");
+
+        // System.out.println("First item: " + sk.first());
         // System.out.println("Testing clear()");
         // sk.clear();
-        sk.print();
-        System.out.println("Max level: " + sk.maxLevel());
-        System.out.println("Level variable: " + sk.level);
+        // sk.print();
+        // System.out.println("Max level: " + sk.maxHeight());
+        // System.out.println("Level variable: " + sk.level);
 
-        System.out.println("Testing last(): ");
-        System.out.println(sk.last());
-        System.out.println("Testing find(): ");
+        // System.out.println("Testing last(): ");
+        // System.out.println(sk.last());
+        
+        // System.out.println("Testing remove: ");
+        // sk.remove(30);
+        
+        // System.out.println("Testing find(): ");
+        // if (sk.contains(25))
+        // {
+        //     System.out.println("Value found");
+        // }
+        // else 
+        //     System.out.println("Value not found");
 
-        if (sk.contains(20))
-        {
-            System.out.println("Value found");
-        }
-        else 
-            System.out.println("Value not found");
+        // System.out.println("Printing after removing");
+        // sk.print();
     }
 }
