@@ -90,30 +90,35 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
             sk.add(t);
     }
 
-    public void reBalance()
-    {
-        for (int i = 0; Math.abs(ran.nextInt() % 2 ) == 0; i++);
-    }
+    // public void reBalance()
+    // {
+    //     for (int i = 0; Math.abs(ran.nextInt() % 2 ) == 0; i++);
+    // }
 
-    public void reBalance(int x)
+    // Suggested by the professor: Creating a new SkipList. new heights for all nodes
+    public void reBalance()
     {
         SkipListSetItem<T> temp = head;
 
-        for (int i = 0; i < size(); i++)
+        for (int i = 0; i <= size(); i++)
         {
             int newLevel = randomizeLevel();
             if (newLevel > maxHeadHeight())
                 adjustHeadLevel(newLevel);
 
-            System.out.println("new Level "+ newLevel);
-            // adjustNodeLevel(newLevel, temp.getNext());
-            if (temp != null)
-            {
-                SkipListSetItem<T> oldNode = temp.forward[0];
+            System.out.println("new Level " + newLevel);
+            // if (temp != null)
+            // {
+                SkipListSetItem<T> oldNode = temp.getNext();
+                if (oldNode == null)
+                    break;
+
+                System.out.println("Value at temp: " + temp.value());
+                System.out.println("Value at oldNode: " + oldNode.value());
 
                 // no need to replace nodes if the newLevel generated is the same as the height of the node to be replaced.
                 // This saves run time.
-                if ( (oldNode == null) || (newLevel + 1 == oldNode.forward.length) )
+                if ( newLevel + 1 == oldNode.forward.length )
                 {
                     temp = temp.getNext();
                     continue;
@@ -137,53 +142,30 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
                                 temp.forward[k] = oldNode.forward[k].forward[k];
                         }
                     }
-                    else // means newNode height is greater than the old node height. 
-                    {
-                        for (int k = 0; k < oldNode.forward.length; k++)
+
+                     // means newNode height is greater than the old node height. 
+                    else if (oldNode.forward.length < newNode.forward.length)
                         {
-                            newNode.forward[k] = oldNode.forward[k];
-                            temp.forward[k] = newNode.forward[k];
-                        }
-        
-                        for (int k = newNode.forward.length; k < oldNode.forward.length; k++)
-                        {
-                            if (temp.forward[k] != null)
-                                newNode.forward[k] = temp.forward[k];
-                            if (newNode.forward[k] != null)
+                            for (int k = 0; k < oldNode.forward.length; k++)
+                            {
+                                newNode.forward[k] = oldNode.forward[k];
                                 temp.forward[k] = newNode.forward[k];
+                            }
+            
+                            for (int k = oldNode.forward.length; k < oldNode.forward.length; k++)
+                            {
+                                // if (temp.forward[k] != null)
+                                newNode.forward[k] = temp.forward[k];
+                    //             if (newNode.forward[k] != null)
+                                temp.forward[k] = newNode.forward[k];
+                            }
                         }
-                    }
+            // }
+
                 }
-                temp = temp.getNext();
-            }
+            temp = temp.getNext();
         }
     }
-
-    public void print() {    // Prints out contents of a skiplist
-        SkipListSetItem<T> temp = head;
-
-        if (temp == null)
-        {
-            System.out.println("=====Nothing to print======");
-        }
-
-        else 
-        {
-            while (temp != null) {
-            System.out.print(temp.value() + ": length is " + temp.forward.length + ":");
-            for (int i=0; i<temp.forward.length; i++)
-            {
-                if (temp.forward[i] == null)
-                    System.out.print("null ");
-                else
-                    System.out.print(temp.forward[i].value() + " ");
-            }
-            System.out.println();
-            temp = temp.forward[0];
-            }
-            System.out.println();
-        }
-      }
 
     // Helper function to randomize the level of a new node
     private int randomizeLevel()
@@ -191,22 +173,6 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         int newLevel;
         for (newLevel = 0; Math.abs(ran.nextInt() % 2 ) == 0; newLevel++);
         return newLevel;
-    }
-
-    // Working on reBalance() 
-    private SkipListSetItem<T> adjustNodeLevel(int newLevel, SkipListSetItem<T> node)
-    {
-        SkipListSetItem<T> temp = node;
-        node = new SkipListSetItem<>(temp.value(), newLevel);
-        for (int i = 0; i < temp.forward.length; i++)
-        {
-            if (temp.forward[i] != null)
-            {
-                node.forward[i] = temp.forward[i];
-            }
-        }
-
-        return null; // for now
     }
 
     private void adjustHeadLevel(int newLevel)
@@ -261,7 +227,6 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
     @Override
     public boolean addAll(Collection<? extends T> c)
     {
-        // Set<T> sk = new SkipListSet<>();
         for (T t : c)
         {
             if (!contains(t))
@@ -402,7 +367,6 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
     @Override
     public boolean remove(Object key)
     {
-        // ArrayList<SkipListSetItem<T>> tempNodeReferences = new ArrayList<>(level+1);
         SkipListSetItem<T> [] tempNodeReferences = new SkipListSetItem[level+1];
         SkipListSetItem<T> temp = head; 
         for (int i = level; i >= 0; i--)
@@ -526,7 +490,6 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         return arr;
     }
 
-
     // Returns an array containing all of the elements in this collection; the runtime type of the returned
     // array is that of the specified array. 
     @SuppressWarnings({"unchecked"})
@@ -540,6 +503,34 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
 
         return (E[])arr;
     }
+
+    // Prints out contents of a skiplist
+    public void print() 
+    {    
+        SkipListSetItem<T> temp = head;
+
+        if (temp == null)
+        {
+            System.out.println("=====Nothing to print======");
+        }
+
+        else 
+        {
+            while (temp != null) {
+            System.out.print(temp.value() + ": length is " + temp.forward.length + ":");
+            for (int i=0; i<temp.forward.length; i++)
+            {
+                if (temp.forward[i] == null)
+                    System.out.print("null ");
+                else
+                    System.out.print(temp.forward[i].value() + " ");
+            }
+            System.out.println();
+            temp = temp.forward[0];
+            }
+            System.out.println();
+        }
+      }
 
     public static void main(String[] args) 
     {
