@@ -389,12 +389,20 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         return true;
     }
 
-    // Retains only the elements in this collection that are contained in the specified collection (optional
+    // Retains only the elements in this set that are contained in the specified collection (optional
     // operation).
     @Override
     public boolean retainAll(Collection<?> c)
     {
-        return false;
+        for (T t : this)
+        {
+            for (Object o : c)
+            {
+                if (!contains(o))
+                    remove(t);
+            }
+        }
+        return true;
     }
 
     @Override
