@@ -14,11 +14,17 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
     // this wrapper class implements comparable
     public class SkipListSetItem<E extends Comparable<E>>
     {
-        // private Object value;
         private E value;
         private SkipListSetItem<E> [] forward; 
 
         // Parameterless constructor?
+        @SuppressWarnings({"unchecked"})
+        SkipListSetItem()
+        {
+            value = null;
+            forward = new SkipListSetItem[1];
+            forward[0] = null;
+        }
 
         @SuppressWarnings({"unchecked"})
         SkipListSetItem(E key, int lev)
@@ -65,7 +71,6 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
             return temp;
         }
 
-
         @Override
         public void remove()
         {
@@ -85,89 +90,29 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
 
     public SkipListSet(Collection<? extends T> c)
     {
-        SkipListSet<T> sk = new SkipListSet<>();
+        this.head = new SkipListSetItem<>(null, 0);  
+        this.level = -1;
+        this.size = 0;
+
         for (T t : c)
-            sk.add(t);
+            this.add(t);
     }
 
-    // public void reBalance()
-    // {
-    //     for (int i = 0; Math.abs(ran.nextInt() % 2 ) == 0; i++);
-    // }
-
-    // Suggested by the professor: Creating a new SkipList. new heights for all nodes
+    // Suggested by the professor: Creating a new SkipList. Ensures new heights for all nodes.
     public void reBalance()
     {
-        SkipListSetItem<T> temp = head;
-
-        for (int i = 0; i <= size(); i++)
+        SkipListSet<T> newSkipList = new SkipListSet<>();
+        SkipListSetItem<T> temp = head.getNext();
+        while (temp != null)
         {
-            int newLevel = randomizeLevel();
-            if (newLevel > maxHeadHeight())
-                adjustHeadLevel(newLevel);
-
-            System.out.println("new Level " + newLevel);
-            // if (temp != null)
-            // {
-                SkipListSetItem<T> oldNode = temp.getNext();
-                if (oldNode == null)
-                    break;
-
-                System.out.println("Value at temp: " + temp.value());
-                System.out.println("Value at oldNode: " + oldNode.value());
-
-                // no need to replace nodes if the newLevel generated is the same as the height of the node to be replaced.
-                // This saves run time.
-                if ( newLevel + 1 == oldNode.forward.length )
-                {
-                    temp = temp.getNext();
-                    continue;
-                }
-
-                else 
-                {
-                    SkipListSetItem<T> newNode = new SkipListSetItem<>(oldNode.value(), newLevel);
-                    if (oldNode.forward.length > newNode.forward.length)
-                    {
-                        for (int j = 0; j < newNode.forward.length; j++)
-                        {
-                            newNode.forward[j] = oldNode.forward[j];
-                            temp.forward[j] = newNode.forward[j];
-                        }
-        
-                        // linking the remaining references stored in oldNode 
-                        for (int k = newNode.forward.length; k < oldNode.forward.length; k++)
-                        {
-                            if (oldNode.forward[k] != null)
-                                temp.forward[k] = oldNode.forward[k].forward[k];
-                        }
-                    }
-
-                     // means newNode height is greater than the old node height. 
-                    else if (oldNode.forward.length < newNode.forward.length)
-                        {
-                            for (int k = 0; k < oldNode.forward.length; k++)
-                            {
-                                newNode.forward[k] = oldNode.forward[k];
-                                temp.forward[k] = newNode.forward[k];
-                            }
-            
-                            for (int k = oldNode.forward.length; k < oldNode.forward.length; k++)
-                            {
-                                // if (temp.forward[k] != null)
-                                newNode.forward[k] = temp.forward[k];
-                    //             if (newNode.forward[k] != null)
-                                temp.forward[k] = newNode.forward[k];
-                            }
-                        }
-            // }
-
-                }
+            newSkipList.add(temp.value());
             temp = temp.getNext();
         }
+
+        this.head = newSkipList.head();
     }
 
-    // Helper function to randomize the level of a new node
+    // Helper function to randomize the level of a new node. Randomization will guarantee log(n) performance
     private int randomizeLevel()
     {
         int newLevel;
@@ -271,9 +216,15 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         return false;
     }
 
+    // Returns true if this set contains all of the elements of the specified collection.
     public boolean containsAll(Collection <?> c)
     {
-        return false;
+        for (Object o : c)
+        {
+            if (!contains(o))
+                return false;
+        }
+        return true;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -502,116 +453,5 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         }
 
         return (E[])arr;
-    }
-
-    // Prints out contents of a skiplist
-    public void print() 
-    {    
-        SkipListSetItem<T> temp = head;
-
-        if (temp == null)
-        {
-            System.out.println("=====Nothing to print======");
-        }
-
-        else 
-        {
-            while (temp != null) {
-            System.out.print(temp.value() + ": length is " + temp.forward.length + ":");
-            for (int i=0; i<temp.forward.length; i++)
-            {
-                if (temp.forward[i] == null)
-                    System.out.print("null ");
-                else
-                    System.out.print(temp.forward[i].value() + " ");
-            }
-            System.out.println();
-            temp = temp.forward[0];
-            }
-            System.out.println();
-        }
-      }
-
-    public static void main(String[] args) 
-    {
-        SkipListSet<Integer> sk = new SkipListSet<>();
-        
-        System.out.println("array size in head: " + sk.head.forward.length);
-        System.out.println("Level: " + sk.level);
-
-        
-        // System.out.println("After first insertion:");
-        
-        
-        // System.out.println(sk.head.forward[0].value);
-        // System.out.println("After second insertion:");
-        sk.add(20);
-        
-        // System.out.println(sk.head.forward[0].forward[0].value);
-        // System.out.println(sk.head.forward[0].forward[0].forward[0]);
-        sk.add(30);
-        
-        // System.out.println(sk.head.forward[0].forward[0].forward[0].value);
-        sk.add(25);
-        sk.add(10);
-        sk.print();
-        
-        System.out.println("Size: " + sk.size());
-
-        sk.reBalance();
-        sk.print();
-        // System.out.println("Testing Remove:");
-        // sk.remove(20);
-        
-        // System.out.println("Size after remove: " + sk.size());
-        // sk.print();
-
-        // Object [] temp = sk.toArray();
-        // for (int i = 0; i < temp.length; i++)
-        // {
-        //     System.out.println(i+1+ ": "+ temp[i]);
-        // }
-
-        // System.out.println("Testing contains: ");
-        // if (sk.contains(10))
-        //     System.out.println("Item found");
-        // else
-        //     System.out.println("Item not found");
-
-        System.out.println("Testing iterator");
-        for (Integer s : sk)
-        {
-            System.out.println(s);
-        }
-
-        // System.out.println(sk.head.forward[0].forward[0].forward[0].forward[0].value);
-
-        // sk.print();
-
-        // System.out.println("Retrieval of current size:");
-
-        // System.out.println("First item: " + sk.first());
-        // System.out.println("Testing clear()");
-        // sk.clear();
-        // sk.print();
-        // System.out.println("Max level: " + sk.maxHeight());
-        // System.out.println("Level variable: " + sk.level);
-
-        // System.out.println("Testing last(): ");
-        // System.out.println(sk.last());
-        
-        // System.out.println("Testing remove: ");
-        // sk.remove(30);
-        
-        // System.out.println("Testing find(): ");
-        // if (sk.contains(25))
-        // {
-        //     System.out.println("Value found");
-        // }
-        // else 
-        //     System.out.println("Value not found");
-
-        // System.out.println("Printing after removing");
-        // sk.print();
     }
 }
