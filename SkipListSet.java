@@ -1,7 +1,7 @@
 // This code was written by Carlos Daniel Arciniegas Murillas
 // CS2 Summer. Matthew Gerber.
 // Project
- 
+
 import java.util.*;
 
 public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
@@ -69,7 +69,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         @Override
         public void remove()
         {
-            // working on it
+            throw new UnsupportedOperationException();
         } 
     }
 
