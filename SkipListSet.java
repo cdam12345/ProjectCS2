@@ -41,6 +41,11 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
             return this.value;
         }
 
+        public void setValue(E s)
+        {
+            this.value = s;
+        }
+
         public SkipListSetItem<E> getNext()
         {
             return forward[0];
@@ -71,10 +76,23 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
             return temp;
         }
 
+        @SuppressWarnings({"unchecked"})
         @Override
         public void remove()
         {
-            throw new UnsupportedOperationException();
+            if (cursor == null)
+                return;
+
+            if (cursor.getNext() != null)
+            {
+                Object temp = cursor.value();
+                cursor.setValue((T)temp);
+                SkipListSet.this.remove(temp);
+                return;
+            }
+
+            // last element in the skipList
+            cursor.setValue(null);
         } 
     }
 
