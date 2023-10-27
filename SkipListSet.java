@@ -80,19 +80,19 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T>
         @Override
         public void remove()
         {
-            if (cursor == null)
+            if (cursor.value() == null)
                 return;
 
             if (cursor.getNext() != null)
             {
-                Object temp = cursor.value();
+                Object temp = cursor.getNext().value();
                 cursor.setValue((T)temp);
-                SkipListSet.this.remove(temp);
+                SkipListSet.this.remove((T)cursor.value());
                 return;
             }
 
             // last element in the skipList
-            cursor.setValue(null);
+            cursor = null;
         } 
     }
 
